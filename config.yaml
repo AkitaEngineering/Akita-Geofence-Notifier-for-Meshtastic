@@ -1,0 +1,59 @@
+# Akita Geofence Notifier Configuration
+
+# --- Meshtastic Settings ---
+# Your private channel Pre-Shared Key (PSK) as a HEX string.
+# Use "" or "changeme" for the primary channel (usually channel 0).
+# Generate using: meshtastic --genpsk
+private_channel_psk: "" # Example: "1PG7z..." (replace with actual hex key if using private channel 1)
+
+# --- GPS Settings ---
+# Serial port where your GPS module is connected
+# Linux examples: /dev/ttyUSB0, /dev/ttyS0, /dev/ttyACM0
+# Windows examples: COM3, COM4
+# Set to "" or null to disable direct serial GPS reading.
+gps_serial_port: "/dev/ttyUSB0"
+# Baud rate for the serial GPS module
+gps_baud_rate: 9600
+
+# --- Timing Intervals (seconds) ---
+# How often to attempt reading and sending GPS location to the mesh
+gps_update_interval: 60
+# How often to check node distances, geofences, and stationary status
+check_interval: 10
+# Time threshold for detecting a stationary node
+stationary_time_threshold: 300 # 5 minutes
+# Distance threshold (km) to consider a node stationary (within the time threshold)
+stationary_distance_threshold: 0.05 # 50 meters
+
+# --- Geofences ---
+# Define named circular geofences.
+# Notifications are triggered when *any* node enters or exits *any* of these fences.
+geofences:
+  - name: "Home Base"
+    latitude: 42.8864 # Example: Port Colborne City Hall approx lat
+    longitude: -79.2496 # Example: Port Colborne City Hall approx lon
+    radius_km: 0.5 # 500 meters radius
+  - name: "Canal Lock 8"
+    latitude: 42.8796
+    longitude: -79.2427
+    radius_km: 0.2 # 200 meters radius
+# Add more geofences as needed following the same structure
+
+# --- Web Interface ---
+web_host: "0.0.0.0" # Host for the web UI (0.0.0.0 makes it accessible on the network)
+web_port: 5000      # Port for the web UI
+
+# --- LED Feedback (Experimental) ---
+# Enable LED proximity feedback (True/False). Requires hardware/firmware support
+# and correct configuration in core/meshtastic_utils.py -> set_device_led function.
+enable_led_feedback: false
+# LED flashes faster as the *closest* node gets nearer.
+# Max flash frequency (Hz) when very close. Set 0 to disable flashing.
+led_max_frequency_hz: 2.0 # Flashes twice per second when close
+# Distance (km) at which max frequency is reached.
+led_min_distance_km: 0.1 # 100 meters
+
+# --- Other ---
+# Earth's approximate radius in kilometers for distance calculations
+geodetic_radius_km: 6371.0
+
