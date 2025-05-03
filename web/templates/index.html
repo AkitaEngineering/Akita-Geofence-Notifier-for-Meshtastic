@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Akita Geofence Notifier{% endblock %}
+
+{% block content %}
+    <h2>Dashboard</h2>
+
+    <section id="status-summary">
+        <h3>Status</h3>
+        <p><strong>Meshtastic Connection:</strong>
+            <span id="connection-status">
+            {% if connection.connected %}
+                <span style="color: green;">Connected</span> (Type: {{ connection.type or '?' }}, Port/Host: {{ connection.port_or_host or '?' }})
+            {% else %}
+                <span style="color: red;">Disconnected</span> {% if connection.error %}(Reason: {{ connection.error }}){% endif %}
+            {% endif %}
+            </span>
+        </p>
+        <p><strong>My Node:</strong>
+            <span id="my-node-status">
+            {% if my_node %}
+                {{ my_node.name }} ({{ my_node.node_id }}) - HW: {{ my_node.hw_model }}
+            {% else %}
+                N/A (Waiting for connection...)
+            {% endif %}
+            </span>
+         </p>
+         <p><strong>Local GPS:</strong> <span id="local-gps">Waiting...</span></p>
+    </section>
+
+    <section id="nodes">
+        <h3>Nodes</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>ID</th>
+                        <th>Lat</th>
+                        <th>Lon</th>
+                        <th>Alt(m)</th>
+                        <th>Distance</th>
+                        <th>SNR</th>
+                        <th>Batt</th>
+                        <th>Last Heard</th>
+                        <th>Pos Time</th>
+                        <th>HW Model</th>
+                    </tr>
+                </thead>
+                <tbody id="node-table-body">
+                    {% for node in nodes %}
+                    <tr>
+                        <td>{{ node.name }}</td>
+                        <td>{{ node.node_id }}</td>
+                        <td>{{ "%.5f"|format(node.latitude) if node.latitude is not none else 'N/A' }}</td>
+                        <td>{{ "%.5f"|format(node.longitude) if node.longitude is not none else 'N/A' }}</td>
+                        <td>{{ node.altitude if node.altitude is not none else 'N/A' }}</td>
+                        <td>{{ node.distance }}</td> {# Already formatted in Flask route #}
+                        <td>{{ node.snr_str }}</td> {# Already formatted #}
+                        <td>{{ node.battery_str }}</td> {# Already formatted #}
+                        <td>{{ node.last_heard_str }}</td> {# Already formatted #}
+                        <td>{{ node.position_time_str }}</td> {# Already formatted #}
+                        <td>{{ node.hw_model }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="11">No nodes detected yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="geofences">
+        <h3>Geofence Status</h3>
+         <div class="table-container">
+             <table>
+                 <thead>
+                     <tr>
+                         <th>Fence Name</th>
+                         <th>Center (Lat, Lon)</th>
+                         <th>Radius (km)</th>
+                         <th>Nodes Inside</th>
+                     </tr>
+                 </thead>
+                 <tbody id="geofence-table-body">
+                     {% for fence in geofences %}
+                     <tr>
+                         <td>{{ fence.name }}</td>
+                         <td>{{ "%.5f"|format(fence.latitude) }}, {{ "%.5f"|format(fence.longitude) }}</td>
+                         <td>{{ fence.radius_km }}</td>
+                         <td>
+                             {% set nodes_in_fence = geofence_status.get(fence.name, []) %}
+                             {% if nodes_in_fence %}
+                                  {{ nodes_in_fence | join(', ') }}
+                             {% else %}
+                                  -
+                             {% endif %}
+                         </td>
+                     </tr>
+                     {% else %}
+                     <tr><td colspan="4">No geofences defined in config.yaml</td></tr>
+                     {% endfor %}
+                 </tbody>
+             </table>
+         </div>
+    </section>
+
+     <section id="stationary">
+        <h3>Stationary Nodes (> {{ config.stationary_time_threshold }}s, < {{ config.stationary_distance_threshold * 1000 }}m)</h3>
+        <p id="stationary-nodes-list">
+            {% if stationary_nodes %}
+                {{ stationary_nodes | join(', ') }}
+            {% else %}
+                None
+            {% endif %}
+        </p>
+    </section>
+
+    <section id="notifications">
+        <h3>Recent Notifications (Last {{ notifications|length }})</h3>
+        <div id="notification-list" class="log-box">
+            {% for notification in notifications %}
+                <div>{{ notification }}</div>
+            {% else %}
+                <div>No notifications yet.</div>
+            {% endfor %}
+        </div>
+    </section>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }} {# Include base scripts #}
+    <script>
+        // More advanced JS to update the dashboard dynamically using the API
+        function updateDashboard() {
+            fetch("{{ url_for('api_status') }}")
+                .then(response => {
+                     if (!response.ok) { throw new Error(`HTTP error! Status: ${response.status}`); }
+                     return response.json();
+                })
+                .then(data => {
+                    // --- Update Connection Status ---
+                    const connStatusElement = document.getElementById('connection-status');
+                    if (connStatusElement) {
+                         let connHtml = '';
+                         if (data.connection && data.connection.connected) {
+                            connHtml = `<span style="color: green;">Connected</span> (Type: ${data.connection.type || '?'}, Port/Host: ${data.connection.port_or_host || '?'})`;
+                         } else {
+                            connHtml = `<span style="color: red;">Disconnected</span>`;
+                            if (data.connection && data.connection.error) {
+                                connHtml += ` (Reason: ${data.connection.error})`;
+                            }
+                         }
+                         connStatusElement.innerHTML = connHtml;
+                    }
+
+                     // --- Update My Node Info ---
+                    const myNodeStatusElement = document.getElementById('my-node-status');
+                    if (myNodeStatusElement) {
+                         if (data.my_node) {
+                              myNodeStatusElement.textContent = `${data.my_node.name} (${data.my_node.node_id}) - HW: ${data.my_node.hw_model}`;
+                         } else {
+                              myNodeStatusElement.textContent = 'N/A (Waiting for connection...)';
+                         }
+                    }
+
+                    // --- Update Local GPS ---
+                    const localGpsElement = document.getElementById('local-gps');
+                    let localLat = 'N/A';
+                    let localLon = 'N/A';
+                    if (data.my_node && data.nodes) {
+                         const myNodeData = data.nodes.find(n => n.node_id === data.my_node.node_id);
+                         if (myNodeData && myNodeData.latitude !== null && myNodeData.longitude !== null) {
+                              localLat = myNodeData.latitude.toFixed(5);
+                              localLon = myNodeData.longitude.toFixed(5);
+                         }
+                    }
+                    if (localGpsElement) {
+                        localGpsElement.textContent = `Lat: ${localLat}, Lon: ${localLon}`;
+                    }
+
+
+                    // --- Update Node Table ---
+                    const nodeTableBody = document.getElementById('node-table-body');
+                    if (nodeTableBody) {
+                        nodeTableBody.innerHTML = ''; // Clear existing rows
+                        if (data.nodes && data.nodes.length > 0) {
+                            // Sort nodes (optional, example by name)
+                            // data.nodes.sort((a, b) => (a.name || a.node_id).localeCompare(b.name || b.node_id));
+
+                            data.nodes.forEach(node => {
+                                const row = nodeTableBody.insertRow();
+                                row.innerHTML = `
+                                    <td>${node.name || 'N/A'}</td>
+                                    <td>${node.node_id}</td>
+                                    <td>${node.latitude !== null ? node.latitude.toFixed(5) : 'N/A'}</td>
+                                    <td>${node.longitude !== null ? node.longitude.toFixed(5) : 'N/A'}</td>
+                                    <td>${node.altitude !== null ? node.altitude : 'N/A'}</td>
+                                    <td>${node.distance_km !== null ? node.distance_km.toFixed(2) + ' km' : 'N/A'}</td>
+                                    <td>${node.snr !== null ? node.snr.toFixed(1) : 'N/A'}</td>
+                                    <td>${node.battery_level !== null ? node.battery_level + '%' : 'N/A'}</td>
+                                    <td>${node.last_heard ? new Date(node.last_heard * 1000).toLocaleTimeString() : 'N/A'}</td>
+                                    <td>${node.position_time ? new Date(node.position_time * 1000).toLocaleTimeString() : 'N/A'}</td>
+                                    <td>${node.hw_model || '?'}</td>
+                                `;
+                            });
+                        } else {
+                            nodeTableBody.innerHTML = '<tr><td colspan="11">No nodes detected yet.</td></tr>';
+                        }
+                    } // end nodeTableBody check
+
+                    // --- Update Geofence Table ---
+                    const geofenceTableBody = document.getElementById('geofence-table-body');
+                    // Geofence definitions don't change dynamically here, only status
+                    if (geofenceTableBody) {
+                         // Iterate through existing rows to update the 'Nodes Inside' column
+                         for (let i = 0; i < geofenceTableBody.rows.length; i++) {
+                              const row = geofenceTableBody.rows[i];
+                              const fenceNameCell = row.cells[0]; // Assuming name is first cell
+                              const nodesInsideCell = row.cells[3]; // Assuming nodes inside is fourth cell
+                              if (fenceNameCell && nodesInsideCell) {
+                                   const fenceName = fenceNameCell.textContent;
+                                   const nodesInFence = data.geofence_status ? data.geofence_status[fenceName] || [] : [];
+                                   nodesInsideCell.textContent = nodesInFence.length > 0 ? nodesInFence.join(', ') : '-';
+                              }
+                         }
+                    } // end geofenceTableBody check
+
+
+                     // --- Update Stationary Nodes ---
+                    const stationaryList = document.getElementById('stationary-nodes-list');
+                    if (stationaryList) {
+                        if (data.stationary_nodes && data.stationary_nodes.length > 0) {
+                             stationaryList.textContent = data.stationary_nodes.join(', ');
+                        } else {
+                             stationaryList.textContent = 'None';
+                        }
+                    }
+
+
+                    // --- Update Notifications ---
+                    const notificationList = document.getElementById('notification-list');
+                    if (notificationList) {
+                        // Check if new notifications are different from current ones to avoid flicker
+                        const currentNotificationHTML = Array.from(notificationList.children).map(div => div.textContent).join('\n');
+                        const newNotificationText = data.notifications ? data.notifications.join('\n') : '';
+
+                        if (currentNotificationHTML !== newNotificationText) {
+                            notificationList.innerHTML = ''; // Clear existing notifications
+                            if (data.notifications && data.notifications.length > 0) {
+                                data.notifications.forEach(msg => {
+                                    const div = document.createElement('div');
+                                    div.textContent = msg;
+                                    notificationList.appendChild(div);
+                                });
+                            } else {
+                                notificationList.innerHTML = '<div>No notifications yet.</div>';
+                            }
+                        }
+                    } // end notificationList check
+
+                })
+                .catch(error => console.error('Error updating dashboard:', error));
+        }
+
+        // Update dashboard periodically
+        const dashboardInterval = setInterval(updateDashboard, 5000); // Update every 5 seconds
+        // Initial update on load
+        document.addEventListener('DOMContentLoaded', updateDashboard);
+    </script>
+{% endblock %}
