@@ -1,0 +1,35 @@
+# --- File: MANIFEST.in ---
+# Include metadata files
+include LICENSE
+include README.md
+include pyproject.toml
+include setup.cfg
+
+# Include the requirements file for reference
+include requirements.txt
+
+# Include an example config if you create one
+# include config.example.yaml
+
+# Recursively include templates and static files for the source distribution
+# This ensures they are present if someone installs from the sdist (.tar.gz)
+recursive-include akita_geofence_notifier/web/templates *
+recursive-include akita_geofence_notifier/web/static *
+
+# Exclude common unwanted files
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude .git*
+global-exclude .vscode*
+global-exclude *.so
+global-exclude *.log
+global-exclude *.swp
+global-exclude .DS_Store
+global-exclude Thumbs.db
+global-exclude build/
+global-exclude dist/
+global-exclude *.egg-info/
+global-exclude .env
+global-exclude .venv
+global-exclude venv
+global-exclude env
