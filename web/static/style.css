@@ -1,0 +1,323 @@
+/* --- File: akita_geofence_notifier/akita_geofence_notifier/web/static/style.css --- */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa; /* Lighter background */
+    color: #343a40; /* Darker text */
+}
+
+header {
+    background-color: #343a40; /* Dark header */
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+    border-bottom: 3px solid #ffc107; /* Accent color */
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+header h1 a {
+    color: #fff;
+    text-decoration: none;
+}
+header h1 a:hover {
+    color: #ffc107; /* Accent hover */
+}
+
+
+header nav {
+    margin-top: 0.5rem;
+}
+
+header nav a {
+    color: #adb5bd; /* Lighter nav link color */
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 1.1em;
+    transition: color 0.2s ease-in-out;
+}
+header nav a:hover, header nav a.active {
+    color: #ffc107; /* Accent hover/active */
+    border-bottom: 2px solid #ffc107;
+    padding-bottom: 2px;
+}
+
+main {
+    max-width: 1400px; /* Wider content area */
+    margin: 30px auto;
+    padding: 25px;
+    background-color: #fff;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08); /* Softer shadow */
+    border-radius: 8px; /* Rounded corners */
+}
+
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    font-size: 0.9em;
+    color: #6c757d; /* Muted footer text */
+    border-top: 1px solid #dee2e6; /* Light border */
+}
+footer a {
+    color: #007bff;
+    text-decoration: none;
+}
+footer a:hover {
+    text-decoration: underline;
+}
+#footer-status {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef; /* Lighter section border */
+}
+section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+h2, h3 {
+    color: #495057; /* Slightly muted headers */
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ffc107;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+h2 { font-size: 1.6em; }
+h3 { font-size: 1.3em; }
+
+
+/* Tables */
+.table-container {
+    overflow-x: auto; /* Allow horizontal scrolling on small screens */
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.95em;
+}
+
+th, td {
+    border: 1px solid #dee2e6; /* Lighter table borders */
+    padding: 10px 12px; /* More padding */
+    text-align: left;
+    vertical-align: top; /* Align content top */
+}
+
+th {
+    background-color: #e9ecef; /* Light header background */
+    font-weight: 600; /* Bolder header text */
+    white-space: nowrap; /* Prevent header text wrapping */
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa; /* Subtle striping */
+}
+tr:hover {
+    background-color: #f1f3f5; /* Hover effect */
+}
+
+/* Log Box for Notifications */
+.log-box {
+    max-height: 350px; /* Increased height */
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+    padding: 15px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap; /* Wrap long lines */
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+
+.log-box div {
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #dee2e6; /* Dotted separator */
+}
+.log-box div:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+/* Configuration page styles */
+form fieldset {
+    border: 1px solid #ced4da;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 6px;
+    background-color: #ffffff;
+}
+form legend {
+    font-weight: 600;
+    font-size: 1.2em;
+    padding: 0 10px;
+    color: #495057;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    align-items: center; /* Vertically align label and input */
+}
+
+.form-group label {
+    display: inline-block;
+    width: 280px; /* Adjust label width */
+    margin-right: 15px;
+    font-weight: 500;
+    flex-shrink: 0; /* Prevent label from shrinking */
+}
+.form-group input[type="text"],
+.form-group input[type="number"] {
+    flex-grow: 1; /* Allow input to take remaining space */
+    min-width: 200px; /* Minimum width for input */
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box; /* Include padding and border in width */
+}
+.form-group input[type="checkbox"] {
+     margin-left: 0; /* Align checkbox */
+     height: 1.2em;
+     width: 1.2em;
+}
+/* Specific styling for checkbox group to align label correctly */
+.form-group-checkbox label {
+     margin-right: 10px; /* Smaller margin for checkbox label */
+}
+.form-group-checkbox input[type="checkbox"] {
+     margin-top: 0; /* Adjust vertical alignment if needed */
+}
+
+
+form small {
+    display: block; /* Make small text appear on new line */
+    margin-left: 295px; /* Align with input fields (label width + margin) */
+    margin-top: -5px; /* Adjust spacing */
+    margin-bottom: 10px;
+    color: #6c757d;
+    font-size: 0.85em;
+}
+/* Adjust small text alignment for checkboxes */
+.form-group-checkbox + small {
+     margin-left: 0;
+     padding-left: 10px;
+}
+
+
+.geofence-entry {
+    border: 1px dashed #dee2e6;
+    padding: 15px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+.geofence-entry h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #343a40;
+    border-bottom: 1px solid #ced4da;
+    padding-bottom: 8px;
+}
+
+/* Buttons */
+button, .button-save {
+    padding: 10px 20px;
+    background-color: #007bff; /* Primary blue */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.2s ease-in-out;
+}
+button:hover, .button-save:hover {
+     background-color: #0056b3; /* Darker blue on hover */
+}
+button:disabled {
+     background-color: #6c757d; /* Muted disabled color */
+     cursor: not-allowed;
+}
+
+/* Flash messages */
+.flashes {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0; /* Add margin below flashes */
+}
+.flash {
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-weight: 500;
+}
+.flash-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+.flash-warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+.flash-error   { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+.flash-info    { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    main {
+        margin: 15px;
+        padding: 15px;
+    }
+    header h1 { font-size: 1.5em; }
+    header nav a { margin: 0 8px; font-size: 1em; }
+
+    .form-group {
+        flex-direction: column; /* Stack label and input */
+        align-items: flex-start; /* Align items to start */
+    }
+    .form-group label {
+        width: 100%; /* Full width label */
+        margin-bottom: 5px;
+        margin-right: 0;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"] {
+        width: 100%; /* Full width input */
+        min-width: unset;
+    }
+    form small {
+        margin-left: 0; /* Reset alignment */
+        margin-top: 5px;
+    }
+    .form-group-checkbox {
+         flex-direction: row; /* Keep checkbox and label inline */
+         align-items: center;
+    }
+    .form-group-checkbox label {
+         width: auto; /* Auto width for checkbox label */
+         margin-bottom: 0;
+    }
+    .form-group-checkbox + small {
+         width: 100%; /* Full width for checkbox help text */
+         margin-left: 0;
+         padding-left: 0;
+         margin-top: 5px;
+    }
+
+    th, td { padding: 8px; }
+    table { font-size: 0.9em; }
+}
+
