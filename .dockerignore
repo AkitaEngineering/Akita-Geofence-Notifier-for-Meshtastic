@@ -1,0 +1,42 @@
+# --- File: .dockerignore ---
+# Ignore files related to Git
+.git
+.gitignore
+
+# Ignore Python virtual environments
+.venv
+venv
+env
+
+# Ignore Python cache and compiled files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore build artifacts
+dist/
+build/
+*.egg-info/
+htmlcov/
+.coverage
+
+# Ignore IDE/Editor specific files
+.idea/
+.vscode/
+*.swp
+
+# Ignore OS specific files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore local configuration overrides (if you use them)
+# config.local.yaml
+
+# Docker specific ignores
+Dockerfile
+.dockerignore
+docker-compose.yml
