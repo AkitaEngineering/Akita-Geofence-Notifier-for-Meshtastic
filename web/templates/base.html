@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Akita Geofence Notifier{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
+</head>
+<body>
+    <header>
+        <h1><a href="{{ url_for('index') }}">📡 Akita Geofence Notifier</a></h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Dashboard</a> |
+            <a href="{{ url_for('config_page') }}">Configuration</a>
+            </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year if now else '2024' }} Akita Engineering - <a href="https://www.akitaengineering.com" target="_blank" rel="noopener noreferrer">www.akitaengineering.com</a> - GPLv3 Licensed</p>
+         <p id="footer-status">Meshtastic: Disconnected</p>
+    </footer>
+
+    {% block scripts %}
+    <script>
+        // Simple script to update connection status in footer (example)
+        function updateFooterStatus() {
+            fetch("{{ url_for('api_status') }}") // Use url_for for API endpoint
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                 })
+                .then(data => {
+                    const footerStatus = document.getElementById('footer-status');
+                    if (!footerStatus) return; // Exit if element not found
+
+                    let statusText = 'Meshtastic: ';
+                    let statusColor = 'red'; // Default disconnected color
+
+                    if (data.connection && data.connection.connected) {
+                        statusText += `<span style="color: green;">Connected</span> (${data.connection.type || '?'}: ${data.connection.port_or_host || '?'})`;
+                        if (data.my_node) {
+                             statusText += ` - My Node: ${data.my_node.name || data.my_node.node_id}`;
+                        } else {
+                             statusText += ` - My Node: N/A`;
+                        }
+                        statusColor = 'green'; // Use green for connected status text itself
+                    } else {
+                        statusText += `<span style="color: red;">Disconnected</span>`;
+                        if (data.connection && data.connection.error) {
+                             statusText += ` (Reason: ${data.connection.error})`;
+                        }
+                    }
+                    footerStatus.innerHTML = statusText; // Use innerHTML to render the span color
+                    // footerStatus.style.color = statusColor; // Set overall text color if needed
+                })
+                .catch(error => {
+                    console.error('Error fetching status for footer:', error);
+                     const footerStatus = document.getElementById('footer-status');
+                     if (footerStatus) {
+                         footerStatus.textContent = 'Meshtastic: Status Error';
+                         footerStatus.style.color = 'orange';
+                     }
+                });
+        }
+        // Update status periodically
+        const statusInterval = setInterval(updateFooterStatus, 15000); // Update every 15 seconds
+        // Initial update on load
+        document.addEventListener('DOMContentLoaded', updateFooterStatus);
+
+        // Add current year to footer if 'now' is not passed from Flask (optional)
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     const footer = document.querySelector('footer p:first-child');
+        //     if (footer && !footer.textContent.includes('20')) { // Basic check if year exists
+        //         footer.innerHTML = footer.innerHTML.replace('&copy;', `&copy; ${new Date().getFullYear()}`);
+        //     }
+        // });
+    </script>
+    {% endblock %}
+</body>
+</html>
