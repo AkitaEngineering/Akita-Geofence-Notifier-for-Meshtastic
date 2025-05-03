@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Configuration - Akita Geofence Notifier{% endblock %}
+
+{% block content %}
+    <h2>Configuration</h2>
+    <p>Edit settings below and click "Save Changes". <br>
+       <strong style="color: orange;">Warning:</strong> Saving will overwrite comments and formatting in <code>config.yaml</code>.<br>
+       <strong style="color: red;">Security Note:</strong> This page should be secured in a production environment.
+    </p>
+    {# Flash messages moved to base.html #}
+
+    <form method="POST" action="{{ url_for('config_page') }}">
+        {# Remove the disabled attribute from fieldset to enable editing #}
+        <fieldset>
+            <legend>Meshtastic</legend>
+            <div class="form-group">
+                <label for="private_channel_psk">Private Channel PSK (Hex):</label>
+                <input type="text" id="private_channel_psk" name="private_channel_psk" value="{{ current_config.private_channel_psk }}">
+            </div>
+            <small>(Leave empty or use default 'changeme' for primary channel. <strong style="color:orange;">Requires restart if changed.</strong>)</small>
+        </fieldset>
+
+        <fieldset>
+             <legend>GPS</legend>
+             <div class="form-group">
+                <label for="gps_serial_port">GPS Serial Port:</label>
+                <input type="text" id="gps_serial_port" name="gps_serial_port" value="{{ current_config.gps_serial_port }}">
+             </div>
+             <small>(Leave empty to disable serial GPS. <strong style="color:orange;">Requires restart if changed.</strong>)</small>
+
+             <div class="form-group">
+                <label for="gps_baud_rate">GPS Baud Rate:</label>
+                <input type="number" id="gps_baud_rate" name="gps_baud_rate" value="{{ current_config.gps_baud_rate }}">
+             </div>
+             <small>(<strong style="color:orange;">Requires restart if changed.</strong>)</small>
+        </fieldset>
+
+        <fieldset>
+            <legend>Timing (seconds)</legend>
+            <div class="form-group">
+                <label for="gps_update_interval">GPS Update Interval:</label>
+                <input type="number" min="1" id="gps_update_interval" name="gps_update_interval" value="{{ current_config.gps_update_interval }}">
+            </div>
+            <div class="form-group">
+                <label for="check_interval">Check Interval:</label>
+                <input type="number" min="1" id="check_interval" name="check_interval" value="{{ current_config.check_interval }}">
+            </div>
+            <div class="form-group">
+                <label for="stationary_time_threshold">Stationary Time Threshold:</label>
+                <input type="number" min="1" id="stationary_time_threshold" name="stationary_time_threshold" value="{{ current_config.stationary_time_threshold }}">
+            </div>
+            <div class="form-group">
+                <label for="stationary_distance_threshold">Stationary Distance Threshold (km):</label>
+                <input type="number" step="0.001" min="0" id="stationary_distance_threshold" name="stationary_distance_threshold" value="{{ current_config.stationary_distance_threshold }}">
+            </div>
+        </fieldset>
+
+        <fieldset>
+             <legend>Web Interface</legend>
+             <div class="form-group">
+                 <label for="web_host">Web Host:</label>
+                <input type="text" id="web_host" name="web_host" value="{{ current_config.web_host }}">
+             </div>
+             <small>(Use 0.0.0.0 for network access. <strong style="color:orange;">Requires restart if changed.</strong>)</small>
+
+             <div class="form-group">
+                <label for="web_port">Web Port:</label>
+                <input type="number" min="1" max="65535" id="web_port" name="web_port" value="{{ current_config.web_port }}">
+             </div>
+             <small>(<strong style="color:orange;">Requires restart if changed.</strong>)</small>
+        </fieldset>
+
+        <fieldset>
+             <legend>LED Feedback (Experimental)</legend>
+             <div class="form-group form-group-checkbox">
+                 <label for="enable_led_feedback">Enable LED Feedback:</label>
+                {# Handle checkbox value: sent only if checked #}
+                <input type="checkbox" id="enable_led_feedback" name="enable_led_feedback" value="true" {% if current_config.enable_led_feedback %}checked{% endif %}>
+             </div>
+             <small>(Effectiveness depends on hardware/firmware and correct code setup in `meshtastic_utils.py`)</small>
+
+             <div class="form-group">
+                <label for="led_max_frequency_hz">Max LED Frequency (Hz):</label>
+                <input type="number" step="0.1" min="0" id="led_max_frequency_hz" name="led_max_frequency_hz" value="{{ current_config.led_max_frequency_hz }}">
+             </div>
+             <div class="form-group">
+                 <label for="led_min_distance_km">Min Distance for Max Freq (km):</label>
+                <input type="number" step="0.01" min="0" id="led_min_distance_km" name="led_min_distance_km" value="{{ current_config.led_min_distance_km }}">
+             </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Geofences</legend>
+            <small>(Editing existing fences only. Add/Remove requires manual `config.yaml` edit & restart.)</small>
+            <div id="geofence-list">
+                 {% for fence in current_config.geofences %}
+                 <div class="geofence-entry">
+                     <h4>Geofence {{ loop.index }}</h4>
+                     {# No hidden input needed if processing relies on name pattern #}
+                     <div class="form-group">
+                         <label for="geofence_{{ loop.index0 }}_name">Name:</label>
+                         <input type="text" id="geofence_{{ loop.index0 }}_name" name="geofence_{{ loop.index0 }}_name" value="{{ fence.name }}">
+                     </div>
+                     <div class="form-group">
+                         <label for="geofence_{{ loop.index0 }}_latitude">Latitude:</label>
+                         <input type="number" step="any" required id="geofence_{{ loop.index0 }}_latitude" name="geofence_{{ loop.index0 }}_latitude" value="{{ fence.latitude }}">
+                     </div>
+                     <div class="form-group">
+                         <label for="geofence_{{ loop.index0 }}_longitude">Longitude:</label>
+                         <input type="number" step="any" required id="geofence_{{ loop.index0 }}_longitude" name="geofence_{{ loop.index0 }}_longitude" value="{{ fence.longitude }}">
+                     </div>
+                     <div class="form-group">
+                         <label for="geofence_{{ loop.index0 }}_radius_km">Radius (km):</label>
+                         <input type="number" step="0.01" min="0.01" required id="geofence_{{ loop.index0 }}_radius_km" name="geofence_{{ loop.index0 }}_radius_km" value="{{ fence.radius_km }}">
+                     </div>
+                 </div>
+                 {% else %}
+                 <p>No geofences defined in current config.</p>
+                 {% endfor %}
+            </div>
+        </fieldset>
+         <br>
+
+        <p><button type="submit" class="button-save">Save Changes</button></p>
+
+    </form>
+
+{% endblock %}
