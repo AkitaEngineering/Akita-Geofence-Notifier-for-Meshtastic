@@ -1,0 +1,14 @@
+# --- File: requirements.txt ---
+# This file lists runtime dependencies for reference or for
+# environments where pyproject.toml is not fully supported.
+# Dependencies are primarily managed via pyproject.toml's [project].dependencies section.
+
+meshtastic>=2.2.21
+pyserial>=3.5
+pynmea2>=1.18.0
+PyYAML>=6.0
+Flask>=2.0
+pubsub-py>=4.0.3 # pubsub used by meshtastic
+
+# Optional for production web server (install with pip install -r requirements.txt -r requirements-prod.txt or pip install .[prod])
+# waitress>=2.1.0
