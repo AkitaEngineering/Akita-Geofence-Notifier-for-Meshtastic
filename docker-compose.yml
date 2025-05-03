@@ -1,0 +1,46 @@
+# --- File: docker-compose.yml ---
+version: '3.8' # Specify docker-compose version
+
+services:
+  akita-notifier:
+    # Build the image from the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Optional: Name the resulting image
+    image: akita-geofence-notifier:latest
+    # Always restart the container if it stops, unless stopped manually
+    restart: unless-stopped
+    # Mount the host's config.yaml into the container's working directory
+    # IMPORTANT: Create a config.yaml file in the same directory as this docker-compose.yml file!
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro # Mount as read-only is safer for config
+      # Optional: Mount logs directory if logging to file inside container
+      # - ./logs:/app/logs # Ensure logs directory exists on host
+    # Map the host port 5000 to the container port 5000 (defined in config.yaml & Dockerfile EXPOSE)
+    ports:
+      - "5000:5000"
+    # --- Mount the serial device (GPS) ---
+    # IMPORTANT: Replace /dev/ttyUSB0 with the actual device path on your HOST machine.
+    # This requires the user running 'docker-compose up' to have permissions
+    # to access this device (often requires being in the 'dialout' or 'tty' group on Linux).
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0" # Map host device to the same path in the container
+      # Add other devices if needed, e.g., /dev/ttyS0:/dev/ttyS0
+      # If Meshtastic device is connected via USB to host, map it too:
+      # - "/dev/ttyACM0:/dev/ttyACM0" # Example Meshtastic device path
+    # Optional: Set environment variables if your application uses them
+    # environment:
+    #   - MESH_HOST=192.168.1.50 # Example if using TCP interface via env var
+    #   - FLASK_SECRET_KEY=your_very_secret_key_here # Set a fixed secret key
+    # Ensure the container has access to host network if needed (e.g., for TCP Meshtastic)
+    # network_mode: host # Use cautiously, breaks port mapping isolation. Prefer specific networks.
+    # Or define specific networks:
+    # networks:
+    #   - default
+
+# Define networks if needed (often not required for simple setups)
+# networks:
+#   default:
+#     driver: bridge
+
