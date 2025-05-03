@@ -1,0 +1,68 @@
+# --- File: pyproject.toml ---
+
+[build-system]
+# Specifies minimum build tool requirements
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# Core project metadata (PEP 621)
+name = "akita-geofence-notifier" # Distribution name on PyPI (use hyphens)
+dynamic = ["version", "readme"] # Version and README content read dynamically via setup.cfg/setuptools
+description = "Meshtastic geofencing, distance tracking, and notification system with GPS integration and web UI."
+authors = [
+    { name = "Akita Engineering", email = "contact@akitaengineering.com" },
+    # Add other contributors if desired
+]
+license = { file = "LICENSE" } # Assumes LICENSE file exists in root
+requires-python = ">=3.8" # Minimum Python version requirement
+classifiers = [
+    # Standard classifiers from https://pypi.org/classifiers/
+    "Development Status :: 4 - Beta", # Changed to Beta
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent", # Assuming no OS-specific C extensions
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: System :: Monitoring",
+    "Topic :: Utilities",
+]
+keywords = ["meshtastic", "geofence", "gps", "lora", "radio", "flask", "gis", "tracker", "notification"]
+
+# Project URLs
+[project.urls]
+Homepage = "https://www.akitaengineering.com" # Or project specific page
+Repository = "https://github.com/YourUsername/akita_geofence_notifier" # Replace with actual URL
+# Documentation = "..." # Add if you have separate docs
+# "Bug Tracker" = "..."
+
+# Runtime dependencies (copied from requirements.txt)
+dependencies = [
+    "meshtastic>=2.2.21", # Specify a recent version known to work
+    "pyserial>=3.5",
+    "pynmea2>=1.18.0",
+    "PyYAML>=6.0",
+    "Flask>=2.0", # Flask 2 or 3 should work
+    "pubsub-py>=4.0.3" # Explicitly add pubsub used by meshtastic callbacks
+]
+
+# Optional dependencies (e.g., for production deployment)
+[project.optional-dependencies]
+# Example: Use 'pip install akita-geofence-notifier[prod]' to install with waitress
+prod = ["waitress>=2.1.0"]
+# dev = ["pytest", "flake8"] # Example for development tools
+
+# Define command-line script(s)
+[project.scripts]
+akita-notifier = "akita_geofence_notifier.main:main" # Command name = package.module:function
+
