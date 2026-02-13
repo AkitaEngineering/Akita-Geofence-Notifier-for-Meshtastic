@@ -8,6 +8,7 @@ import os
 from queue import Queue, Empty
 from datetime import datetime
 from copy import deepcopy # Needed for comparing config changes
+from typing import Optional, List
 
 # Import necessary core components & shared state
 # Ensure config is imported first if other modules depend on its global state at import time
@@ -114,8 +115,7 @@ def index():
             node_data['battery_str'] = f"{node.battery_level}%" if node.battery_level is not None else "N/A"
             # Format SNR
             node_data['snr_str'] = f"{node.snr:.1f}" if node.snr is not None else "N/A"
-
-
+            node_data['rssi_str'] = (f"{int(node.rssi)} dBm" if node.rssi is not None else "N/A")
             nodes_list.append(node_data)
 
     # Sort nodes (e.g., by name or last heard) - Optional

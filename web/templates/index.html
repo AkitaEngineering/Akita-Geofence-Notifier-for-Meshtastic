@@ -40,6 +40,7 @@
                         <th>Alt(m)</th>
                         <th>Distance</th>
                         <th>SNR</th>
+                        <th>RSSI</th>
                         <th>Batt</th>
                         <th>Last Heard</th>
                         <th>Pos Time</th>
@@ -56,13 +57,14 @@
                         <td>{{ node.altitude if node.altitude is not none else 'N/A' }}</td>
                         <td>{{ node.distance }}</td> {# Already formatted in Flask route #}
                         <td>{{ node.snr_str }}</td> {# Already formatted #}
+                        <td>{{ node.rssi_str }}</td>
                         <td>{{ node.battery_str }}</td> {# Already formatted #}
                         <td>{{ node.last_heard_str }}</td> {# Already formatted #}
                         <td>{{ node.position_time_str }}</td> {# Already formatted #}
                         <td>{{ node.hw_model }}</td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="11">No nodes detected yet.</td></tr>
+                    <tr><td colspan="12">No nodes detected yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -198,14 +200,15 @@
                                     <td>${node.altitude !== null ? node.altitude : 'N/A'}</td>
                                     <td>${node.distance_km !== null ? node.distance_km.toFixed(2) + ' km' : 'N/A'}</td>
                                     <td>${node.snr !== null ? node.snr.toFixed(1) : 'N/A'}</td>
+                                    <td>${node.rssi !== null ? node.rssi.toFixed(0) + ' dBm' : 'N/A'}</td>
                                     <td>${node.battery_level !== null ? node.battery_level + '%' : 'N/A'}</td>
                                     <td>${node.last_heard ? new Date(node.last_heard * 1000).toLocaleTimeString() : 'N/A'}</td>
                                     <td>${node.position_time ? new Date(node.position_time * 1000).toLocaleTimeString() : 'N/A'}</td>
-                                    <td>${node.hw_model || '?'}</td>
+                                    <td>${node.hw_model || '?'} </td>
                                 `;
                             });
                         } else {
-                            nodeTableBody.innerHTML = '<tr><td colspan="11">No nodes detected yet.</td></tr>';
+                            nodeTableBody.innerHTML = '<tr><td colspan="12">No nodes detected yet.</td></tr>';
                         }
                     } // end nodeTableBody check
 

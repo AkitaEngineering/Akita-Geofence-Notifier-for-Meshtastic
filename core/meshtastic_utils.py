@@ -5,6 +5,7 @@ import meshtastic.tcp_interface
 import meshtastic.util
 import time
 import logging
+import os
 import threading
 from pubsub import pub # Meshtastic uses pubsub for events
 from typing import Dict, Optional, Callable, Any, Union
@@ -51,8 +52,11 @@ def on_receive(packet, interface): # pylint: disable=unused-argument
         if 'rxSnr' in packet:
              node_db[node_id].snr = packet.get('rxSnr')
         if 'rxRssi' in packet:
-             # You could store RSSI too if desired
-             pass
+             # Store RSSI (dBm) if present
+             try:
+                 node_db[node_id].rssi = float(packet.get('rxRssi'))
+             except (TypeError, ValueError):
+                 node_db[node_id].rssi = None
         # Battery level might be in NODEINFO_APP or TELEMETRY_APP
         # Update it wherever we see it
 
@@ -352,7 +356,8 @@ def connect_meshtastic() -> Optional[meshtastic.MeshInterface]:
          logger.error("Failed to connect to Meshtastic device via Serial or TCP.")
          # Unsubscribe from connection events if we failed completely
          try: pub.unsubscribe(on_connection, "meshtastic.connection")
-         except Exception: pass
+         except Exception as e:
+             logger.debug(f"Failed to unsubscribe from connection events: {e}")
          return None
     else:
          # Should not be reached if logic is correct, but as safety:
@@ -414,59 +419,86 @@ def set_device_led(interface: meshtastic.MeshInterface, state: bool = None, freq
            or by consulting Meshtastic documentation/community for your specific hardware.
      """
      if not config.enable_led_feedback:
-          # Try to ensure LED is off if feature is disabled, ignore errors
-          try:
-               # *** Replace with actual KEY and VALUE for OFF state for YOUR device ***
-               LED_CONFIG_KEY_OFF = "device.led_mode" # Replace! Placeholder!
-               VALUE_OFF = 0                     # Replace! Placeholder!
-               if interface and connection_status.get("connected"):
-                    logger.debug(f"Disabling LED feedback via {LED_CONFIG_KEY_OFF}={VALUE_OFF}")
-                    interface.setNodeConfig(LED_CONFIG_KEY_OFF, VALUE_OFF)
-          except Exception as e:
-               logger.warning(f"Could not explicitly turn off LED (feature disabled): {e}")
+          # Try to ensure LED is off if feature is disabled; attempt several common keys (best-effort)
+          if interface and connection_status.get("connected"):
+               for off_key in ("device.led_mode", "led.mode", "led.blink", "led.brightness"):
+                    try:
+                         # brightness keys accept numeric level (0 = off); mode-like keys commonly use 0=off
+                         interface.setNodeConfig(off_key, 0)
+                         logger.debug(f"Disabling LED feedback via {off_key}=0")
+                         break
+                    except Exception:
+                         # Try next candidate key
+                         continue
+          else:
+               logger.debug("LED feedback disabled in config; no Meshtastic interface available to explicitly turn off LED.")
           return
 
      if not interface or not connection_status.get("connected"):
           logger.warning("Cannot set LED, Meshtastic not connected.")
           return
 
-     # *** IMPORTANT: Replace these with actual findings for your device/firmware ***
-     LED_CONFIG_KEY = "device.led_mode" # Replace! Example hypothetical key
-     VALUE_OFF = 0                     # Replace! Example value
-     VALUE_ON = 1                      # Replace! Example value (if solid on is possible)
-     VALUE_BLINK_SLOW = 2              # Replace! Example value
-     VALUE_BLINK_FAST = 3              # Replace! Example value
-     # --- End of values to replace ---
+     # Candidate keys to try (best-effort across different devices/firmware).
+     candidate_keys = [
+         "device.led_mode",
+         "led.mode",
+         "led.blink",
+         "led.brightness",
+     ]
 
-     # Map desired frequency/state to the available values
-     target_value = VALUE_OFF # Default to off
+     # Determine logical target mode from provided inputs
+     if frequency_hz > 1.5:
+         target_mode = "fast"
+     elif frequency_hz > 0.2:
+         target_mode = "slow"
+     elif state is True:
+         target_mode = "on"
+     else:
+         target_mode = "off"
 
-     if frequency_hz > 1.5:  # If frequency is high -> Fast Blink
-         target_value = VALUE_BLINK_FAST
-         # logger.debug(f"Setting LED to fast blink (freq: {frequency_hz:.1f} Hz -> Value: {target_value})")
-     elif frequency_hz > 0.2: # If frequency is moderate -> Slow Blink
-         target_value = VALUE_BLINK_SLOW
-         # logger.debug(f"Setting LED to slow blink (freq: {frequency_hz:.1f} Hz -> Value: {target_value})")
-     elif state is True: # If explicit state is ON and no blinking -> Solid ON (if possible)
-          target_value = VALUE_ON
-          # logger.debug(f"Setting LED to solid ON (Value: {target_value})")
-     else: # Default to OFF
-          target_value = VALUE_OFF
-          # logger.debug(f"Setting LED to OFF (Value: {target_value})")
+     def _value_for_key(key_name: str, mode: str):
+         """Return a sensible value for the given key and logical mode (best-effort)."""
+         if "brightness" in key_name:
+             return 0 if mode == "off" else (255 if mode == "on" else 128)
+         mapping = {"off": 0, "on": 1, "slow": 2, "fast": 3}
+         return mapping.get(mode, 0)
 
-     try:
-         # logger.debug(f"Calling setNodeConfig('{LED_CONFIG_KEY}', {target_value})")
-         # TODO: Check if the value actually needs changing to avoid unnecessary commands
-         # current_val = interface.getNodeConfig().get(LED_CONFIG_KEY) # Hypothetical get
-         # if current_val != target_value:
-         interface.setNodeConfig(LED_CONFIG_KEY, target_value)
+     # Try to read current node config (if interface exposes it) to avoid unnecessary writes
+     current_conf = None
+     get_conf = getattr(interface, "getNodeConfig", None)
+     if callable(get_conf):
+         try:
+             current_conf = get_conf()
+         except Exception:
+             current_conf = None
 
-     except AttributeError:
-         logger.error("Meshtastic interface does not have 'setNodeConfig' method. Cannot control LED.")
-     except meshtastic.MeshtasticError as e:
-          logger.error(f"Meshtastic error setting LED config: {e}")
-     except Exception as e:
-         logger.error(f"Failed to set LED config ({LED_CONFIG_KEY}): {e}", exc_info=True)
+     set_success = False
+     last_error = None
+     for key in candidate_keys:
+         val = _value_for_key(key, target_mode)
+         try:
+             if isinstance(current_conf, dict) and key in current_conf and current_conf.get(key) == val:
+                 logger.debug(f"LED config '{key}' already set to {val}; skipping write.")
+                 set_success = True
+                 break
+
+             interface.setNodeConfig(key, val)
+             logger.info(f"LED config set: {key}={val}")
+             set_success = True
+             break
+         except AttributeError:
+             # Interface doesn't support setNodeConfig
+             raise AttributeError("Meshtastic interface does not have 'setNodeConfig' method. Cannot control LED.")
+         except Exception as e:
+             last_error = e
+             logger.debug(f"Attempt to set LED config '{key}' failed: {e}")
+             continue
+
+     if not set_success:
+         if last_error:
+             logger.error(f"Failed to set LED configuration (last error): {last_error}")
+         else:
+             logger.warning("Could not find a suitable LED config key on this device/firmware. LED control not applied.")
 
 
 def set_gps_location_on_mesh(interface: meshtastic.MeshInterface, lat: float, lon: float, alt: Optional[int] = None):

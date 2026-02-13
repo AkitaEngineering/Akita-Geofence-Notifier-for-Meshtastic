@@ -4,6 +4,7 @@ import pynmea2
 import time
 import threading
 import logging
+from typing import Optional, Tuple
 from .config import config # Use the global config object
 
 logger = logging.getLogger(__name__)
@@ -110,7 +111,8 @@ class GPSModule:
                  if self.ser:
                      try:
                          self.ser.close()
-                     except Exception: pass # Ignore errors during close
+                    except Exception as e:
+                        logger.warning(f"Error closing GPS serial port after SerialException: {e}")
                  self.ser = None # Force reconnect attempt in the next iteration
                  self._has_fix = False # Assume fix lost on serial error
                  with self._lock:
@@ -165,7 +167,7 @@ class GPSModule:
         self.ser = None
 
 
-    def get_location(self) -> tuple[float | None, float | None]:
+    def get_location(self) -> Tuple[Optional[float], Optional[float]]:
         """Returns the latest valid GPS location (latitude, longitude). Thread-safe."""
         with self._lock:
             # Return None if fix was lost or never acquired

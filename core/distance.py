@@ -1,11 +1,12 @@
 # --- File: akita_geofence_notifier/akita_geofence_notifier/core/distance.py ---
 import math
 import logging
+from typing import Optional
 from .config import config # Import the loaded config
 
 logger = logging.getLogger(__name__)
 
-def calculate_distance_km(lat1: float | None, lon1: float | None, lat2: float | None, lon2: float | None) -> float:
+def calculate_distance_km(lat1: Optional[float], lon1: Optional[float], lat2: Optional[float], lon2: Optional[float]) -> float:
     """
     Calculates the distance between two lat/lon points using the Haversine formula.
     Returns float('inf') if any coordinate is None or invalid.

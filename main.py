@@ -5,6 +5,7 @@ import logging
 import sys
 import signal
 import os
+import meshtastic
 from queue import Queue, Empty
 from typing import Optional, List, Dict
 

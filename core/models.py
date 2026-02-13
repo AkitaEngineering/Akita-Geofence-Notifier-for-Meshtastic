@@ -15,6 +15,7 @@ class NodeInfo:
     last_heard: Optional[float] = None # time.time() timestamp
     position_time: Optional[int] = None # GPS epoch time, if available
     battery_level: Optional[int] = None
+    rssi: Optional[float] = None
     snr: Optional[float] = None
 
     def distance_to(self, other_node: 'NodeInfo') -> float:
