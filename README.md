@@ -1,6 +1,8 @@
 # Akita Geofence Notifier for Meshtastic
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+SPDX-License-Identifier: GPL-3.0-or-later
 This Akita Engineering project implements a geofencing, distance-tracking, and notification system for Meshtastic devices, leveraging both external serial GPS modules and GPS data shared over the mesh network.
 
 It allows users to:
@@ -204,7 +206,11 @@ docker-compose down
 
 ### License
 
-This project is licensed under the GNU General Public License v3.0.
+This project is licensed under the GNU General Public License v3.0 (GPL-3.0-or-later).
+
+See the [LICENSE](LICENSE) file for full license text.
+
+Copyright (C) 2026 Akita Engineering
 
 
 ### Contributing
